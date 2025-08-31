@@ -25,7 +25,7 @@ interface=vxlan0
 bind-interfaces
 
 # Dynamic IPs assigned to PODs - we keep a range for static IPs
-dhcp-range=${VXLAN_IP_NETWORK}.${VXLAN_GATEWAY_FIRST_DYNAMIC_IP},${VXLAN_IP_NETWORK}.255,12h
+dhcp-range=${VXLAN_IP_NETWORK}.${VXLAN_GATEWAY_FIRST_DYNAMIC_IP},${VXLAN_IP_NETWORK}.${VXLAN_DHCP_END},12h
 
 # For debugging purposes, log each DNS query as it passes through
 # dnsmasq.

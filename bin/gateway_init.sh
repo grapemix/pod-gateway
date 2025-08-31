@@ -26,9 +26,8 @@ if [[ $(cat /proc/sys/net/ipv4/ip_forward) -ne 1 ]]; then
 fi
 
 # Create VXLAN NIC
-VXLAN_GATEWAY_IP="${VXLAN_IP_NETWORK}.1"
 ip link add vxlan0 type vxlan id $VXLAN_ID dev eth0 dstport "${VXLAN_PORT:-0}" || true
-ip addr add ${VXLAN_GATEWAY_IP}/24 dev vxlan0 || true
+ip addr add ${VXLAN_GATEWAY_IP}/${VXLAN_PREFIX} dev vxlan0 || true
 ip link set up dev vxlan0
 if [[ -n "$VPN_INTERFACE_MTU" ]]; then
   ETH0_INTERFACE_MTU=$(cat /sys/class/net/eth0/mtu)

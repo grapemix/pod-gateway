@@ -15,9 +15,38 @@ NOT_ROUTED_TO_GATEWAY_CIDRS=""
 VXLAN_ID="42"
 # Vxlan Port to use, change it to 4789 (preferably) when using Cillium
 VXLAN_PORT="0"
-# VXLAN need an /24 IP range not conflicting with K8S and local IP ranges
-VXLAN_IP_NETWORK="172.16.0"
-# Keep a range of IPs for static assignment in nat.conf
+
+# NEW: Optional CIDR notation for flexible network sizes (e.g., "172.16.0.0/16")
+VXLAN_NETWORK_CIDR="${VXLAN_NETWORK_CIDR:-}"
+
+# Calculate network parameters based on configuration
+if [[ -n "$VXLAN_NETWORK_CIDR" ]]; then
+    # Parse CIDR notation
+    VXLAN_NETWORK_BASE="${VXLAN_NETWORK_CIDR%/*}"
+    VXLAN_PREFIX="${VXLAN_NETWORK_CIDR#*/}"
+    
+    # Extract network portion for compatibility and calculate gateway
+    IFS='.' read -r o1 o2 o3 o4 <<< "$VXLAN_NETWORK_BASE"
+    if [[ $VXLAN_PREFIX -ge 24 ]]; then
+        VXLAN_IP_NETWORK="${o1}.${o2}.${o3}"
+        VXLAN_GATEWAY_IP="${o1}.${o2}.${o3}.1"
+        VXLAN_DHCP_END="255"
+    elif [[ $VXLAN_PREFIX -ge 16 ]]; then
+        VXLAN_IP_NETWORK="${o1}.${o2}"
+        VXLAN_GATEWAY_IP="${o1}.${o2}.0.1"
+        VXLAN_DHCP_END="255.255"
+    else
+        VXLAN_IP_NETWORK="${o1}"
+        VXLAN_GATEWAY_IP="${o1}.0.0.1"
+        VXLAN_DHCP_END="255.255.255"
+    fi
+else
+    # Legacy mode: /24 network (backward compatibility)
+    VXLAN_PREFIX="24"
+    VXLAN_GATEWAY_IP="${VXLAN_IP_NETWORK}.1"
+    VXLAN_DHCP_END="255"
+fi
+
 VXLAN_GATEWAY_FIRST_DYNAMIC_IP=20
 
 # If using a VPN, interface name created by it
